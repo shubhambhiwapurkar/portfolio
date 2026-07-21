@@ -1,220 +1,257 @@
 /*
- * Portfolio Website JavaScript
+ * Portfolio — interaction layer
  * Author: Shubham Bhiwapurkar
  */
 
-// Initialize when DOM is fully loaded
-document.addEventListener('DOMContentLoaded', () => {
-    // Set current year in footer
-    document.getElementById('currentYear').textContent = new Date().getFullYear();
-    
-    // Mobile navigation toggle
-    const mobileNavToggle = document.querySelector('.mobile-nav-toggle');
-    const hamburger = document.querySelector('.hamburger');
-    const primaryNav = document.getElementById('primary-navigation');
-    
-    mobileNavToggle.addEventListener('click', () => {
-        hamburger.classList.toggle('active');
-        primaryNav.classList.toggle('active');
-        document.body.classList.toggle('nav-open');
-    });
-    
-    // Close mobile nav when clicking on a link
-    const navLinks = document.querySelectorAll('.nav-links a');
-    
-    navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            hamburger.classList.remove('active');
-            primaryNav.classList.remove('active');
-            document.body.classList.remove('nav-open');
-        });
-    });
-    
-    // Active section tracking with Intersection Observer
-    const sections = document.querySelectorAll('section');
-    const navItems = document.querySelectorAll('.nav-links a');
-    const bottomNavItems = document.querySelectorAll('.bottom-nav-item');
-    
-    const observerOptions = {
-        root: null,
-        rootMargin: '0px',
-        threshold: 0.2
-    };
-    
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const id = entry.target.getAttribute('id');
-                
-                // Update desktop nav
-                navItems.forEach(item => {
-                    item.classList.remove('active');
-                    if (item.getAttribute('href') === `#${id}`) {
-                        item.classList.add('active');
-                    }
-                });
-                
-                // Update bottom nav
-                bottomNavItems.forEach(item => {
-                    item.classList.remove('active');
-                    if (item.getAttribute('href') === `#${id}`) {
-                        item.classList.add('active');
-                    }
-                });
-            }
-        });
-    }, observerOptions);
-    
-    sections.forEach(section => {
-        observer.observe(section);
-    });
-    
-    // Back to top button
-    const backToTopButton = document.getElementById('backToTop');
-    
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 500) {
-            backToTopButton.classList.add('visible');
-        } else {
-            backToTopButton.classList.remove('visible');
-        }
-    });
-    
-    backToTopButton.addEventListener('click', () => {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    });
-    
-    // Sticky navigation on scroll
-    const nav = document.querySelector('nav');
-    let lastScrollTop = 0;
-    
-    window.addEventListener('scroll', () => {
-        const currentScrollTop = window.scrollY;
-        
-        if (currentScrollTop > 100) {
-            nav.style.height = '70px';
-            nav.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
-        } else {
-            nav.style.height = '80px';
-            nav.style.boxShadow = 'none';
-        }
-        
-        // Hide nav when scrolling down on mobile
-        if (window.innerWidth <= 768) {
-            if (currentScrollTop > lastScrollTop) {
-                // Scrolling down
-                nav.style.transform = 'translateY(-100%)';
-            } else {
-                // Scrolling up
-                nav.style.transform = 'translateY(0)';
-            }
-        }
-        
-        lastScrollTop = currentScrollTop;
-    });
-    
-    // Form submission (using formspree.io)
-    const contactForm = document.getElementById('contactForm');
-    
-    if (contactForm) {
-        contactForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = new FormData(contactForm);
-            const formObject = Object.fromEntries(formData);
-            
-            // You can replace this URL with your own formspree.io form URL
-            // Or set up your own serverless function to handle form submissions
-            try {
-                const response = await fetch('https://formspree.io/f/your-form-id', {
-                    method: 'POST',
-                    body: JSON.stringify(formObject),
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    alert('Thank you for your message! I will get back to you soon.');
-                    contactForm.reset();
-                } else {
-                    throw new Error('Something went wrong');
-                }
-            } catch (error) {
-                alert('There was a problem sending your message. Please try again later.');
-                console.error('Form submission error:', error);
-            }
-        });
-    }
-    
-    // Animate items when they come into view
-    const animateOnScroll = () => {
-        const elementsToAnimate = document.querySelectorAll('.glass-card, .section-header, .timeline-item');
-        
-        const animateObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                    animateObserver.unobserve(entry.target);
-                }
-            });
-        }, {
-            threshold: 0.1
-        });
-        
-        elementsToAnimate.forEach(element => {
-            element.style.opacity = '0';
-            element.style.transform = 'translateY(20px)';
-            element.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-            animateObserver.observe(element);
-        });
-    };
-    
-    // Run animation on page load
-    animateOnScroll();
-    
-    // Smooth scrolling for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            
-            const targetId = this.getAttribute('href');
-            if (targetId === '#') return;
-            
-            const targetElement = document.querySelector(targetId);
-            if (targetElement) {
-                const navHeight = document.querySelector('nav').offsetHeight;
-                const targetPosition = targetElement.getBoundingClientRect().top + window.scrollY - navHeight;
-                
-                window.scrollTo({
-                    top: targetPosition,
-                    behavior: 'smooth'
-                });
-            }
-        });
-    });
-    
-    // Type writer effect for job title
-    const jobTitle = document.querySelector('.job-title');
-    if (jobTitle) {
-        const text = jobTitle.textContent;
-        jobTitle.textContent = '';
-        
-        const typeWriter = (text, i = 0) => {
-            if (i < text.length) {
-                jobTitle.textContent += text.charAt(i);
-                i++;
-                setTimeout(() => typeWriter(text, i), 100);
-            }
+(() => {
+    'use strict';
+
+    const $ = (sel, root = document) => root.querySelector(sel);
+    const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* ---------- Footer year ---------- */
+    const yearEl = $('#currentYear');
+    if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+    /* ---------- Mobile nav ---------- */
+    const navToggle = $('#navToggle');
+    const navLinks = $('#navLinks');
+
+    if (navToggle && navLinks) {
+        const setNav = (open) => {
+            navLinks.classList.toggle('open', open);
+            navToggle.setAttribute('aria-expanded', String(open));
         };
-        
-        // Start after a brief delay
-        setTimeout(() => {
-            typeWriter(text);
-        }, 1000);
+
+        navToggle.addEventListener('click', () => {
+            setNav(navToggle.getAttribute('aria-expanded') !== 'true');
+        });
+
+        navLinks.addEventListener('click', (e) => {
+            if (e.target.closest('a')) setNav(false);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') setNav(false);
+        });
     }
-});
+
+    /* ---------- Header: hide on scroll down, scroll progress ---------- */
+    const header = $('#siteHeader');
+    const progress = $('#scrollProgress');
+    const backToTop = $('#backToTop');
+    let lastY = window.scrollY;
+    let ticking = false;
+
+    const onScroll = () => {
+        const y = window.scrollY;
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+
+        if (progress) {
+            progress.style.width = max > 0 ? `${(y / max) * 100}%` : '0%';
+        }
+
+        if (header) {
+            header.classList.toggle('scrolled', y > 20);
+            // Only auto-hide once past the hero, and never while the mobile menu is open.
+            const menuOpen = navLinks && navLinks.classList.contains('open');
+            header.classList.toggle('hidden', y > 400 && y > lastY && !menuOpen);
+        }
+
+        // Back to top
+        if (backToTop) backToTop.classList.toggle('visible', y > 500);
+
+        lastY = y;
+        ticking = false;
+    };
+
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            ticking = true;
+            window.requestAnimationFrame(onScroll);
+        }
+    }, { passive: true });
+
+    /* ---------- Back to top ---------- */
+    if (backToTop) {
+        backToTop.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+        });
+    }
+
+    /* ---------- Active section highlighting ---------- */
+    const sections = $$('main section[id]');
+    const navAnchors = $$('#navLinks a');
+
+    if (sections.length && navAnchors.length && 'IntersectionObserver' in window) {
+        const setActive = (id) => {
+            navAnchors.forEach((a) => {
+                a.classList.toggle('active', a.getAttribute('href') === `#${id}`);
+            });
+        };
+
+        const spy = new IntersectionObserver((entries) => {
+            // Pick the visible section closest to the top of the viewport.
+            const visible = entries
+                .filter((e) => e.isIntersecting)
+                .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+            if (visible) setActive(visible.target.id);
+        }, { rootMargin: '-30% 0px -55% 0px', threshold: 0 });
+
+        sections.forEach((s) => spy.observe(s));
+    }
+
+    /* ---------- Reveal on scroll ---------- */
+    const revealTargets = $$('.panel, .section-head, .stats, .tl-item');
+
+    if (reduceMotion || !('IntersectionObserver' in window)) {
+        revealTargets.forEach((el) => el.classList.add('reveal', 'shown'));
+    } else {
+        revealTargets.forEach((el) => el.classList.add('reveal'));
+
+        const revealer = new IntersectionObserver((entries, obs) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) return;
+                entry.target.classList.add('shown');
+                obs.unobserve(entry.target);
+            });
+        }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+        revealTargets.forEach((el) => revealer.observe(el));
+    }
+
+    /* ---------- Typed hero command ---------- */
+    const typed = $('#typedCmd');
+    if (typed) {
+        const text = typed.dataset.text || '';
+        if (reduceMotion) {
+            typed.textContent = text;
+        } else {
+            let i = 0;
+            const tick = () => {
+                if (i > text.length) return;
+                typed.textContent = text.slice(0, i);
+                i += 1;
+                setTimeout(tick, 55);
+            };
+            setTimeout(tick, 400);
+        }
+    }
+
+    /* ---------- Animated stat counters ---------- */
+    const nums = $$('.num');
+    if (nums.length) {
+        const runCount = (el) => {
+            const target = parseFloat(el.dataset.count);
+            const suffix = el.dataset.suffix || '';
+
+            if (reduceMotion) {
+                el.textContent = `${target}${suffix}`;
+                return;
+            }
+
+            const duration = 1100;
+            const start = performance.now();
+
+            const step = (now) => {
+                const p = Math.min((now - start) / duration, 1);
+                // easeOutCubic
+                const eased = 1 - Math.pow(1 - p, 3);
+                el.textContent = `${Math.round(target * eased)}${suffix}`;
+                if (p < 1) requestAnimationFrame(step);
+            };
+
+            requestAnimationFrame(step);
+        };
+
+        if ('IntersectionObserver' in window) {
+            const counter = new IntersectionObserver((entries, obs) => {
+                entries.forEach((entry) => {
+                    if (!entry.isIntersecting) return;
+                    runCount(entry.target);
+                    obs.unobserve(entry.target);
+                });
+            }, { threshold: 0.5 });
+
+            nums.forEach((n) => counter.observe(n));
+        } else {
+            nums.forEach(runCount);
+        }
+    }
+
+    /* ---------- Contact form ----------
+     * Default: opens the visitor's mail client with the message pre-filled.
+     * This works on a static host with no backend.
+     *
+     * To collect submissions server-side instead, create a form at formspree.io
+     * and add the endpoint to the markup:
+     *   <form id="contactForm" data-endpoint="https://formspree.io/f/xxxxxxxx">
+     */
+    const form = $('#contactForm');
+    const status = $('#formStatus');
+    const RECIPIENT = 'shubhambhiwapurkar@gmail.com';
+
+    if (form) {
+        const say = (msg, kind = '') => {
+            if (!status) return;
+            status.textContent = msg;
+            status.className = `form-status ${kind}`.trim();
+        };
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Use form.elements: `form.name` resolves to the form's own name
+            // attribute, not the field named "name".
+            const nameField = form.elements.namedItem('name');
+            const emailField = form.elements.namedItem('email');
+            const messageField = form.elements.namedItem('message');
+
+            const name = nameField.value.trim();
+            const email = emailField.value.trim();
+            const message = messageField.value.trim();
+
+            // Validate
+            let firstInvalid = null;
+            [nameField, emailField, messageField].forEach((f) => {
+                const bad = !f.value.trim() || (f.type === 'email' && !f.checkValidity());
+                f.setAttribute('aria-invalid', String(bad));
+                if (bad && !firstInvalid) firstInvalid = f;
+            });
+
+            if (firstInvalid) {
+                say('Please fill in every field with a valid email.', 'err');
+                firstInvalid.focus();
+                return;
+            }
+
+            const endpoint = form.dataset.endpoint;
+
+            if (endpoint) {
+                say('Sending…');
+                try {
+                    const res = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                        body: JSON.stringify({ name, email, message })
+                    });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    form.reset();
+                    say('Message sent — thanks, I\'ll be in touch.', 'ok');
+                } catch (err) {
+                    console.error('Form submission failed:', err);
+                    say(`Couldn't send. Email me directly at ${RECIPIENT}.`, 'err');
+                }
+                return;
+            }
+
+            // No endpoint configured → hand off to the visitor's mail client.
+            const subject = `Portfolio enquiry from ${name}`;
+            const body = `${message}\n\n—\n${name}\n${email}`;
+            window.location.href =
+                `mailto:${RECIPIENT}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            say('Opening your email app…', 'ok');
+        });
+    }
+})();
